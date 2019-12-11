@@ -4,7 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.0.7.RELEASE'
 }
 
-group 'com.incomm.vms.com.incomm.vms.fileprocess'
+group 'com.incomm.vms.com.incomm.vms.com.incomm.vms.fileprocess'
 version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
