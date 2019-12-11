@@ -1,6 +1,7 @@
 package com.incomm.vms.fileprocess.service;
 
 import com.incomm.vms.fileprocess.model.LineItemDetail;
+import com.incomm.vms.fileprocess.model.PostBackInfo;
 import com.incomm.vms.fileprocess.model.RejectReasonMaster;
 import com.incomm.vms.fileprocess.model.ReturnFileDTO;
 import com.incomm.vms.fileprocess.repository.CardIssuanceStatusRepository;
@@ -11,6 +12,7 @@ import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
 import com.incomm.vms.fileprocess.repository.ReturnFileDataRepository;
 import com.incomm.vms.fileprocess.repository.UploadDetailRepository;
+import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +25,8 @@ import java.util.Optional;
 import static com.incomm.vms.fileprocess.config.Constants.*;
 
 @Service
-public class DataProcessingService {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DataProcessingService.class);
+public class MessageProcessingService {
+    private final static Logger LOGGER = LoggerFactory.getLogger(MessageProcessingService.class);
     public static final String SUCCESS_FLAG = "Y";
 
     @Autowired
@@ -51,7 +53,7 @@ public class DataProcessingService {
     @Value("${vms.instance-code}")
     private String instanceCode;
 
-    public void processRecords(ReturnFileDTO returnFileRecord) {
+    public void processMessage(ReturnFileDTO returnFileRecord) {
         Map<String, String> messageHeaders = returnFileRecord.getHeaders();
         String fileName = messageHeaders.get(FILE_NAME);
         String correlationId = messageHeaders.get(CORRELATION_ID);
@@ -62,7 +64,7 @@ public class DataProcessingService {
         Optional<LineItemDetail> lineItemDetail = lineItemDetailRepository.findLineItem(instanceCode, returnFileRecord.getSerialNumber());
 
         if (!lineItemDetail.isPresent()) {
-            errorProcessingService.processSerilNumberNotFoundError(returnFileRecord, fileName);
+            errorProcessingService.processSerialNumberNotFoundError(returnFileRecord, fileName);
             fileAggregationService.addConsumerCountForFailedRecord(messageHeaders);
         } else {
             String panCode = lineItemDetail.get().getPanCode();
@@ -76,7 +78,7 @@ public class DataProcessingService {
             returnFileDataRepository.save(instanceCode, fileName, recordNumber, returnFileRecord, lineItemDetail.get());
 
             boolean deletePanCode = isDeletePanCode(lineItemDetail, fileProcessReason);
-            fileAggregationService.saveConsumedDetail(panCode, deletePanCode, messageHeaders);
+            fileAggregationService.saveConsumedDetail(lineItemDetail.get(), deletePanCode, messageHeaders);
         }
         LOGGER.info("Done processing message filename: {} recordNumber: {} correlationId: {} ", fileName, recordNumber, correlationId);
     }

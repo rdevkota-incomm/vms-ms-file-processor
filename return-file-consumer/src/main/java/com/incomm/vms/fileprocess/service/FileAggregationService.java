@@ -3,12 +3,14 @@ package com.incomm.vms.fileprocess.service;
 import com.incomm.vms.fileprocess.cache.FileAggregateSummaryStore;
 import com.incomm.vms.fileprocess.model.FileAggregateDTO;
 import com.incomm.vms.fileprocess.model.FileAggregateSummary;
+import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
 import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
+import javafx.scene.shape.Line;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import static com.incomm.vms.fileprocess.config.Constants.*;
 
@@ -43,11 +47,11 @@ public class FileAggregationService {
         }
     }
 
-    public void saveConsumedDetail(String panCode, Boolean deleteRequired, Map<String, String> headers) {
+    public void saveConsumedDetail(LineItemDetail lineItemDetail, Boolean deleteRequired, Map<String, String> headers) {
         String correlationId = headers.get(CORRELATION_ID);
         String fileName = headers.get(FILE_NAME);
-        LOGGER.debug("Saving consumer DTO with header {}", headers);
-        FileAggregateSummaryStore.updateConsumedRecordCount(correlationId, panCode, deleteRequired, fileName);
+        LOGGER.debug("Saving consumer DTO with header {} correlationId {}", headers, correlationId);
+        FileAggregateSummaryStore.updateConsumedRecordCount(correlationId, lineItemDetail, deleteRequired, fileName);
         if (isConsumptionComplete(correlationId)) {
             aggregateSummary(correlationId);
         }
@@ -56,7 +60,7 @@ public class FileAggregationService {
     public void addConsumerCountForFailedRecord(Map<String, String> headers) {
         String correlationId = headers.get(CORRELATION_ID);
         String fileName = headers.get(FILE_NAME);
-        LOGGER.debug("Saving consumer DTO with header {}", headers);
+        LOGGER.debug("Saving consumer DTO with header {} correlationId {}", headers, correlationId);
         FileAggregateSummaryStore.updateConsumedFailedRecordCount(correlationId, fileName);
         if (isConsumptionComplete(correlationId)) {
             aggregateSummary(correlationId);
@@ -67,9 +71,13 @@ public class FileAggregationService {
         FileAggregateSummary summary = FileAggregateSummaryStore.getSummaryStore(correlationId);
         LOGGER.info("Will update product detail .. ");
         // get aggregate info
-        if (!summary.getListOfPanCodes().isEmpty()) {
+        if (!summary.getLineItemDetails().isEmpty()) {
             LOGGER.info("Getting Pan codes ");
-            List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(summary.getListOfPanCodes());
+            List<String> panCodes = summary.getLineItemDetails()
+                    .stream()
+                    .map( x -> x.getPanCode())
+                    .collect(Collectors.toList());
+            List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(panCodes);
             aggregateList.stream().forEach(x -> updateOrder(x));
         }
 

@@ -15,5 +15,6 @@ public class Constants {
     public final static String CONSUMER_CONTAINER_AGG_ID = "printer-awk-agg-id";
     public final static String CONSUMER_CONTAINER_GROUP = "printer-awk-group";
 
+    public static final String ORDER_FSAPI_ONE = "1";
 
 }

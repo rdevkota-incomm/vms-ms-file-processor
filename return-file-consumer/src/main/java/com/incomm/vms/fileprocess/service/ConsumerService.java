@@ -16,7 +16,7 @@ public class ConsumerService extends Thread {
     private static Logger LOGGER = LoggerFactory.getLogger(ConsumerService.class);
 
     @Autowired
-    private DataProcessingService dataProcessingService;
+    private MessageProcessingService messageProcessingService;
     @Autowired
     private FileAggregationService fileAggregationService;
 
@@ -26,7 +26,7 @@ public class ConsumerService extends Thread {
         String payload = consumerRecord.value().toString();;
         ReturnFileDTO returnFileDTO = gson.fromJson(payload, ReturnFileDTO.class);
         LOGGER.info("Received Message payload: {}", returnFileDTO.toString());
-        dataProcessingService.processRecords(returnFileDTO);
+        messageProcessingService.processMessage(returnFileDTO);
         acknowledgment.acknowledge();
     }
 

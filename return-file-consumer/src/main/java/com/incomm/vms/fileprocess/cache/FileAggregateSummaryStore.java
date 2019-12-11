@@ -2,6 +2,7 @@ package com.incomm.vms.fileprocess.cache;
 
 import com.google.gson.Gson;
 import com.incomm.vms.fileprocess.model.FileAggregateSummary;
+import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.SummaryStoreCache;
 import com.incomm.vms.fileprocess.repository.SummaryStoreRepository;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.incomm.vms.fileprocess.config.Constants.AGGREGATE_SUMMARY_CACHE_KEY;
 
 public class FileAggregateSummaryStore {
+    private static final int DEFAULT_TOTAL_PRODUCED_RECORD_COUNT = 1000000;
     private static Logger LOGGER = LoggerFactory.getLogger(FileAggregateSummaryStore.class);
     private static SummaryStoreRepository summaryStoreRepository;
 
@@ -37,7 +39,7 @@ public class FileAggregateSummaryStore {
 
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
-            summary.setListOfPanCodes(new ArrayList<>());
+            summary.setLineItemDetails(new ArrayList<>());
             summary.setListOfDeletePanCodes(new ArrayList<>());
             summary.setFileName(fileName);
             summary.setCompletionTime(getSystemTime());
@@ -46,10 +48,6 @@ public class FileAggregateSummaryStore {
             return summary;
         });
         syncCache();
-    }
-
-    private static long getSystemTime() {
-        return System.currentTimeMillis();
     }
 
     public static void updateConsumedFailedRecordCount(String correlationId, String fileName) {
@@ -64,10 +62,10 @@ public class FileAggregateSummaryStore {
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
             summary.setListOfDeletePanCodes(new ArrayList<>());
-            summary.setListOfPanCodes(new ArrayList<>());
+            summary.setLineItemDetails(new ArrayList<>());
             summary.setCompletionTime(getSystemTime());
             summary.setFileName(fileName);
-            summary.setTotalProducedRecordCount(10000);
+            summary.setTotalProducedRecordCount(DEFAULT_TOTAL_PRODUCED_RECORD_COUNT);
             summary.setTotalConsumedRecordCount(1);
             return summary;
         });
@@ -75,14 +73,14 @@ public class FileAggregateSummaryStore {
         syncCache();
     }
 
-    public static void updateConsumedRecordCount(String correlationId, String panCode, Boolean addToDeleteList, String fileName) {
+    public static void updateConsumedRecordCount(String correlationId, LineItemDetail lineItemDetail, Boolean addToDeleteList, String fileName) {
         summaryStore.computeIfPresent(correlationId, (k, v) -> {
             int consumedCount = v.getTotalConsumedRecordCount();
             v.setTotalConsumedRecordCount(consumedCount + 1);
             v.setCompletionTime(getSystemTime());
-            v.setPanCode(panCode);
+            v.setLineItemDetail(lineItemDetail);
             if (addToDeleteList) {
-                v.setDeletePanCode(panCode);
+                v.setDeletePanCode(lineItemDetail.getPanCode());
             }
             return v;
         });
@@ -90,14 +88,14 @@ public class FileAggregateSummaryStore {
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
             summary.setListOfDeletePanCodes(new ArrayList<>());
-            summary.setListOfPanCodes(new ArrayList<>());
+            summary.setLineItemDetails(new ArrayList<>());
             summary.setCompletionTime(getSystemTime());
             summary.setFileName(fileName);
             summary.setTotalConsumedRecordCount(1);
-            summary.setTotalProducedRecordCount(10000);
-            summary.setPanCode(panCode);
+            summary.setTotalProducedRecordCount(DEFAULT_TOTAL_PRODUCED_RECORD_COUNT);
+            summary.setLineItemDetail(lineItemDetail);
             if (addToDeleteList) {
-                summary.setDeletePanCode(panCode);
+                summary.setDeletePanCode(lineItemDetail.getPanCode());
             }
             return summary;
         });
@@ -131,5 +129,9 @@ public class FileAggregateSummaryStore {
         } catch (Exception e) {
             LOGGER.warn("Redis exception occured: {}", e.getLocalizedMessage(), e);
         }
+    }
+
+    private static long getSystemTime() {
+        return System.currentTimeMillis();
     }
 }
