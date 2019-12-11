@@ -13,7 +13,7 @@ public class FileAggregateSummary implements Serializable {
     private String fileName;
 
     private List<LineItemDetail> lineItemDetails;
-    private List<String> listOfDeletePanCodes;
+//    private List<String> listOfDeletePanCodes;
 
     public int getTotalProducedRecordCount() {
         return totalProducedRecordCount;
@@ -43,17 +43,17 @@ public class FileAggregateSummary implements Serializable {
         this.lineItemDetails.add(lineItemDetail);
     }
 
-    public List<String> getListOfDeletePanCodes() {
-        return listOfDeletePanCodes;
-    }
-
-    public void setListOfDeletePanCodes(List<String> listOfDeletePanCodes) {
-        this.listOfDeletePanCodes = listOfDeletePanCodes;
-    }
-
-    public void setDeletePanCode(String panCode) {
-        this.listOfDeletePanCodes.add(panCode);
-    }
+//    public List<String> getListOfDeletePanCodes() {
+//        return listOfDeletePanCodes;
+//    }
+//
+//    public void setListOfDeletePanCodes(List<String> listOfDeletePanCodes) {
+//        this.listOfDeletePanCodes = listOfDeletePanCodes;
+//    }
+//
+//    public void setDeletePanCode(String panCode) {
+//        this.listOfDeletePanCodes.add(panCode);
+//    }
 
     public long getCompletionTime() {
         return completionTime;

@@ -22,6 +22,19 @@ public class DeleteCardRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    public String deleteCard(String panCode) {
+
+        SimpleJdbcCall jdbcCall =  new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("delete_card")
+                .declareParameters(
+                        new SqlParameter("PAN_CODE", Types.VARCHAR),
+                        new SqlOutParameter("RESPONSE_MESSAGE", Types.VARCHAR));
+
+        SqlParameterSource in = new MapSqlParameterSource().addValue("PAN_CODE", panCode );
+        Map<String, Object> simpleJdbcCallResult = jdbcCall.execute(in);
+        return simpleJdbcCallResult.get("p_resp_msg_out").toString();
+    }
+
     public String deleteCards(List<String> cardPanList) {
 
         SimpleJdbcCall jdbcCall =  new SimpleJdbcCall(jdbcTemplate)

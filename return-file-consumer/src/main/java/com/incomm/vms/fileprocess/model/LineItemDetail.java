@@ -8,6 +8,7 @@ public class LineItemDetail {
     private String parentOId;
     private String orderId;
     private String lineItemId;
+    private Boolean isDeleteCard;
 
     public String getPanCode() {
         return panCode;
@@ -47,6 +48,14 @@ public class LineItemDetail {
 
     public void setLineItemId(String lineItemId) {
         this.lineItemId = lineItemId;
+    }
+
+    public Boolean isDeleteCard() {
+        return isDeleteCard;
+    }
+
+    public void setIsDeleteCard(Boolean deleteCard) {
+        isDeleteCard = deleteCard;
     }
 
     @Override

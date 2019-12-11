@@ -23,13 +23,14 @@ public class FileAggregateSummaryStore {
     }
 
     private static ConcurrentHashMap<String, FileAggregateSummary> summaryStore;
+
     static {
         summaryStore = new ConcurrentHashMap<>();
     }
 
     public static void updateProducedRecordCount(String correlationId, String fileName, int totalRecordCount) {
         LOGGER.info("Total message count:{} for file with correlationId:{} filename:{}", totalRecordCount,
-                correlationId, fileName );
+                correlationId, fileName);
         summaryStore.computeIfPresent(correlationId, (k, v) -> {
             v.setCompletionTime(getSystemTime());
             v.setFileName(fileName);
@@ -40,7 +41,6 @@ public class FileAggregateSummaryStore {
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
             summary.setLineItemDetails(new ArrayList<>());
-            summary.setListOfDeletePanCodes(new ArrayList<>());
             summary.setFileName(fileName);
             summary.setCompletionTime(getSystemTime());
             summary.setTotalProducedRecordCount(totalRecordCount);
@@ -61,7 +61,6 @@ public class FileAggregateSummaryStore {
 
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
-            summary.setListOfDeletePanCodes(new ArrayList<>());
             summary.setLineItemDetails(new ArrayList<>());
             summary.setCompletionTime(getSystemTime());
             summary.setFileName(fileName);
@@ -73,30 +72,24 @@ public class FileAggregateSummaryStore {
         syncCache();
     }
 
-    public static void updateConsumedRecordCount(String correlationId, LineItemDetail lineItemDetail, Boolean addToDeleteList, String fileName) {
+    public static void updateConsumedRecordCount(String correlationId, LineItemDetail lineItemDetail, String fileName) {
         summaryStore.computeIfPresent(correlationId, (k, v) -> {
             int consumedCount = v.getTotalConsumedRecordCount();
             v.setTotalConsumedRecordCount(consumedCount + 1);
             v.setCompletionTime(getSystemTime());
             v.setLineItemDetail(lineItemDetail);
-            if (addToDeleteList) {
-                v.setDeletePanCode(lineItemDetail.getPanCode());
-            }
             return v;
         });
 
         summaryStore.computeIfAbsent(correlationId, v -> {
             FileAggregateSummary summary = new FileAggregateSummary();
-            summary.setListOfDeletePanCodes(new ArrayList<>());
             summary.setLineItemDetails(new ArrayList<>());
             summary.setCompletionTime(getSystemTime());
             summary.setFileName(fileName);
             summary.setTotalConsumedRecordCount(1);
             summary.setTotalProducedRecordCount(DEFAULT_TOTAL_PRODUCED_RECORD_COUNT);
             summary.setLineItemDetail(lineItemDetail);
-            if (addToDeleteList) {
-                summary.setDeletePanCode(lineItemDetail.getPanCode());
-            }
+
             return summary;
         });
         syncCache();

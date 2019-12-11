@@ -10,7 +10,6 @@ import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
-import javafx.scene.shape.Line;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import static com.incomm.vms.fileprocess.config.Constants.*;
+import static com.incomm.vms.fileprocess.config.Constants.CORRELATION_ID;
+import static com.incomm.vms.fileprocess.config.Constants.FILE_NAME;
 
 @Service
 public class FileAggregationService {
@@ -47,11 +46,11 @@ public class FileAggregationService {
         }
     }
 
-    public void saveConsumedDetail(LineItemDetail lineItemDetail, Boolean deleteRequired, Map<String, String> headers) {
+    public void saveConsumedDetail(LineItemDetail lineItemDetail, Map<String, String> headers) {
         String correlationId = headers.get(CORRELATION_ID);
         String fileName = headers.get(FILE_NAME);
         LOGGER.debug("Saving consumer DTO with header {} correlationId {}", headers, correlationId);
-        FileAggregateSummaryStore.updateConsumedRecordCount(correlationId, lineItemDetail, deleteRequired, fileName);
+        FileAggregateSummaryStore.updateConsumedRecordCount(correlationId, lineItemDetail, fileName);
         if (isConsumptionComplete(correlationId)) {
             aggregateSummary(correlationId);
         }
@@ -69,41 +68,43 @@ public class FileAggregationService {
 
     protected void aggregateSummary(String correlationId) {
         FileAggregateSummary summary = FileAggregateSummaryStore.getSummaryStore(correlationId);
-        LOGGER.info("Will update product detail .. ");
-        // get aggregate info
+        LOGGER.info("Will update product detail for {} correlationId:{}", summary, correlationId);
+
         if (!summary.getLineItemDetails().isEmpty()) {
-            LOGGER.info("Getting Pan codes ");
             List<String> panCodes = summary.getLineItemDetails()
                     .stream()
                     .map( x -> x.getPanCode())
                     .collect(Collectors.toList());
+            LOGGER.info("Total orders to aggregate: {} for correlationId: {}", panCodes.size(), correlationId);
             List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(panCodes);
-            aggregateList.stream().forEach(x -> updateOrder(x));
-        }
 
-        // delete records
-        if (!summary.getListOfDeletePanCodes().isEmpty()) {
-            LOGGER.info("Deleting Pan codes ");
-            deleteCardRepository.deleteCards(summary.getListOfDeletePanCodes());
+            aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate));
+
+            summary.getLineItemDetails().stream()
+                    .filter(lineItemDetail -> lineItemDetail.isDeleteCard() == true)
+                    .forEach(x -> deleteCard(x));
         }
         // clean up cache once completed
         completeProcessing(correlationId);
     }
 
     @Transactional
-    private void updateOrder(OrderDetailAggregate orderDetailAggregate) {
-        orderLineItemRepository.update(orderDetailAggregate);
-        OrderDetailCount detailCount = orderLineItemRepository.getDetailCount(
-                orderDetailAggregate.getOrderId(),
-                orderDetailAggregate.getPartnerId());
-        orderDetailRepository.update(detailCount, orderDetailAggregate.getOrderId(),
-                orderDetailAggregate.getPartnerId());
+    private void updateOrder(OrderDetailAggregate aggregate) {
+        orderLineItemRepository.update(aggregate);
+        OrderDetailCount detailCount = orderLineItemRepository.getDetailCount(aggregate.getOrderId(), aggregate.getPartnerId());
+        orderDetailRepository.update(detailCount, aggregate.getOrderId(), aggregate.getPartnerId());
+    }
+
+    @Transactional
+    private void deleteCard(LineItemDetail lineItemDetail) {
+        String result = deleteCardRepository.deleteCard(lineItemDetail.getPanCode());
+        LOGGER.info("Result of the delete card is {} ", result);
     }
 
     private boolean isConsumptionComplete(String correlationId) {
         FileAggregateSummary summary = FileAggregateSummaryStore.getSummaryStore(correlationId);
-        LOGGER.info("summary.getTotalConsumedRecordCount(): {}", summary.getTotalConsumedRecordCount());
-        LOGGER.info("summary.getTotalProducedRecordCount(): {}", summary.getTotalProducedRecordCount());
+        LOGGER.info("summary.getTotalConsumedRecordCount(): {} for correlationId:{}", summary.getTotalConsumedRecordCount(), correlationId);
+        LOGGER.info("summary.getTotalProducedRecordCount(): {} for correlationId:{}\"", summary.getTotalProducedRecordCount(), correlationId);
         return summary.getTotalConsumedRecordCount() >= summary.getTotalProducedRecordCount();
     }
 

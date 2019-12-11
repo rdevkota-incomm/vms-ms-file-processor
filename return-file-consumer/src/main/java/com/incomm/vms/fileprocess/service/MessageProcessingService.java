@@ -1,7 +1,6 @@
 package com.incomm.vms.fileprocess.service;
 
 import com.incomm.vms.fileprocess.model.LineItemDetail;
-import com.incomm.vms.fileprocess.model.PostBackInfo;
 import com.incomm.vms.fileprocess.model.RejectReasonMaster;
 import com.incomm.vms.fileprocess.model.ReturnFileDTO;
 import com.incomm.vms.fileprocess.repository.CardIssuanceStatusRepository;
@@ -12,7 +11,6 @@ import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
 import com.incomm.vms.fileprocess.repository.ReturnFileDataRepository;
 import com.incomm.vms.fileprocess.repository.UploadDetailRepository;
-import javafx.geometry.Pos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,8 +75,9 @@ public class MessageProcessingService {
 
             returnFileDataRepository.save(instanceCode, fileName, recordNumber, returnFileRecord, lineItemDetail.get());
 
-            boolean deletePanCode = isDeletePanCode(lineItemDetail, fileProcessReason);
-            fileAggregationService.saveConsumedDetail(lineItemDetail.get(), deletePanCode, messageHeaders);
+            boolean isDeletePanCode = isDeletePanCode(lineItemDetail, fileProcessReason);
+            lineItemDetail.get().setIsDeleteCard(isDeletePanCode);
+            fileAggregationService.saveConsumedDetail(lineItemDetail.get(), messageHeaders);
         }
         LOGGER.info("Done processing message filename: {} recordNumber: {} correlationId: {} ", fileName, recordNumber, correlationId);
     }
