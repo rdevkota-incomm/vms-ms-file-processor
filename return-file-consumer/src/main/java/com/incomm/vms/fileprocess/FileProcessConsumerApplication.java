@@ -28,10 +28,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.incomm.vms.fileprocess.config.Constants.AGGREGATE_SUMMARY_CACHE_KEY;
 
 @SpringBootApplication
-@ComponentScan("com.incomm.vms.com.incomm.vms.fileprocess")
+@ComponentScan("com.incomm.vms.fileprocess")
 @EnableTransactionManagement
-@EnableJdbcRepositories(basePackages = "com.incomm.vms.com.incomm.vms.fileprocess.repository")
-@EnableRedisRepositories(basePackages = "com.incomm.vms.com.incomm.vms.fileprocess.repository")
+@EnableJdbcRepositories(basePackages = "com.incomm.vms.fileprocess.repository")
+@EnableRedisRepositories(basePackages = "com.incomm.vms.fileprocess.repository")
 @EnableCaching
 @EnableScheduling
 public class FileProcessConsumerApplication implements CommandLineRunner {
