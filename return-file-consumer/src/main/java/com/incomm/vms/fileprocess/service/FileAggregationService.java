@@ -6,6 +6,7 @@ import com.incomm.vms.fileprocess.model.FileAggregateSummary;
 import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
+import com.incomm.vms.fileprocess.model.PostbackInfo;
 import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.incomm.vms.fileprocess.config.Constants.CORRELATION_ID;
@@ -73,7 +75,7 @@ public class FileAggregationService {
         if (!summary.getLineItemDetails().isEmpty()) {
             List<String> panCodes = summary.getLineItemDetails()
                     .stream()
-                    .map( x -> x.getPanCode())
+                    .map(x -> x.getPanCode())
                     .collect(Collectors.toList());
             LOGGER.info("Total orders to aggregate: {} for correlationId: {}", panCodes.size(), correlationId);
             List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(panCodes);
@@ -99,6 +101,18 @@ public class FileAggregationService {
     private void deleteCard(LineItemDetail lineItemDetail) {
         String result = deleteCardRepository.deleteCard(lineItemDetail.getPanCode());
         LOGGER.info("Result of the delete card is {} ", result);
+    }
+
+    private void sendPostback(LineItemDetail lineItemDetail) {
+        Optional<PostbackInfo> optionalPostback = orderDetailRepository.findPostbackInfo(lineItemDetail.getOrderId(),
+                lineItemDetail.getPartnerId());
+        if (optionalPostback.isPresent()) {
+            if (optionalPostback.get().getReponse().equalsIgnoreCase("true") ||
+                    optionalPostback.get().getReponse().equalsIgnoreCase("1")) {
+
+            }
+        }
+
     }
 
     private boolean isConsumptionComplete(String correlationId) {

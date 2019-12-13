@@ -82,23 +82,4 @@ public class LineItemDetailRepository {
                 panCode);
     }
 
-    public int update(ReturnFileDTO returnFileRecord, LineItemDetail lineItemDetail, RejectReasonMaster fileProcessReason) {
-        String sql = " UPDATE vms_line_item_dtl SET "
-                + " vli_reject_code = ? "
-                + " vli_reject_reason = ? "
-                + " vli_serial_number = ? "
-                + " vli_status = "
-                + " CASE  WHEN ( vli_status NOT IN ( 'Completed', 'Shipped' ) OR vli_status IS NULL ) THEN "
-                + " DECODE( ? , 'Y', 'Printer_Acknowledged', vli_status) "
-                + " ELSE "
-                + " vli_status "
-                + " END "
-                + " WHERE vli_pan_code = ? ";
-
-        return jdbcTemplate.update(sql,
-                fileProcessReason.getRejectCode(),
-                fileProcessReason.getRejectReason(),
-                returnFileRecord.getSerialNumber(),
-                fileProcessReason.getSuccessFailureFlag());
-    }
 }

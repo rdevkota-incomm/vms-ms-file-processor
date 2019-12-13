@@ -44,7 +44,7 @@ public class FileProcessingService {
                 LOGGER.debug("Parsed RecordCount: {} with CSV line: \n {}", totalRecordCount, returnFileDTO.toString());
             }
         }
-        LOGGER.info("Done processing File {} in path {} with CorrelationId {}", fileName, filePath, correlationId);
+        LOGGER.info("Done processing File {} in path {} with CorrelationId {} fileName {}", fileName, filePath, correlationId, fileName);
         produceAggregate(correlationId, totalRecordCount, fileName);
     }
 
@@ -63,7 +63,7 @@ public class FileProcessingService {
         fileAggregateDTO.setFileName(fileName);
         fileAggregateDTO.setTotalRecordCount(totalRecordCount);
         fileAggregateDTO.setCorrelationId(correlationId.toString());
-        LOGGER.debug("Producing aggregate message with headers {} for correlationId: {}", fileAggregateDTO, correlationId);
+        LOGGER.debug("Producing aggregate message with headers {} for correlationId: {} fileName{}", fileAggregateDTO, correlationId, fileName);
         producerService.produceAggregateMessage(fileAggregateDTO);
     }
 }

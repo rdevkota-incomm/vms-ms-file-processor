@@ -25,11 +25,6 @@ public class FileWatcherService {
     @Value("${vms.printer-ack.monitor.folder}")
     private String monitorFolder;
 
-//    @Autowired
-//    public FileWatcherService(FileProcessingService fileProcessingService) {
-//        this.fileProcessingService = fileProcessingService;
-//    }
-
     public void monitorFolder() throws IOException, InterruptedException {
         LOGGER.info("File is being monitored under {} folder", monitorFolder);
         WatchService watchService = FileSystems.getDefault().newWatchService();
@@ -40,11 +35,14 @@ public class FileWatcherService {
         WatchKey key;
         while ((key = watchService.take()) != null) {
             for (WatchEvent<?> event : key.pollEvents()) {
-                LOGGER.info("New File has been received {}", event.context().toString());
+                String fileName = event.context().toString();
+                LOGGER.info("New File has been received {}", fileName);
                 try {
+                    long start = System.currentTimeMillis();
                     fileProcessingService.parseCsvFile(filePath, event.context().toString());
+                    LOGGER.info("Complete parsing file {} in {} Millis", fileName, (System.currentTimeMillis() - start));
                 } catch(Exception e) {
-                    LOGGER.error("Issue processing file {}", e.getLocalizedMessage(), e);
+                    LOGGER.error("Error processing file {}", e.getLocalizedMessage(), e);
                 }
             }
             key.reset();
