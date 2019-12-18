@@ -9,6 +9,7 @@ import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
+import com.incomm.vms.fileprocess.utility.DistinctPredicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +40,7 @@ public class OrderAggregationService {
     @Autowired
     private LineItemDetailRepository lineItemDetailRepository;
     @Autowired
-    private RestTemplate  restTemplate;
+    private RestTemplate restTemplate;
 
     @Bean
     public RestTemplate restTemplate() {
@@ -55,9 +56,13 @@ public class OrderAggregationService {
 
     protected void aggregateSummary(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(lineItemDetail);
-        aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
+        aggregateList.stream()
+                .forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
 
-        aggregateList.stream().forEach(orderDetailAggregate -> sendPostBack(orderDetailAggregate, fileName, correlationId));
+        aggregateList.stream()
+                .filter(DistinctPredicate.distinctByKey(x -> x.getOrderId()))
+                .filter((DistinctPredicate.distinctByKey(y -> y.getPartnerId())))
+                .forEach(orderDetailAggregate -> sendPostBack(orderDetailAggregate, fileName, correlationId));
     }
 
     @Transactional
@@ -81,8 +86,11 @@ public class OrderAggregationService {
         Optional<PostBackInfo> optionalPostBack = orderDetailRepository.findPostBackInfo(aggregate.getOrderId(), aggregate.getPartnerId());
         if (optionalPostBack.isPresent()) {
             PostBackInfo postBackInfo = optionalPostBack.get();
+//            PostBackInfo postBackInfo = new PostBackInfo();
             LOGGER.info("Retrieved PostBackInfo:{} for file:{} correlationId:{}", postBackInfo.toString(), fileName, correlationId);
 
+//            postBackInfo.setUrl("http://10.44.0.220:9000/cxf/services/gpp/b2b/cards/dummyPost");
+//            postBackInfo.setReponse("true");
             if (!StringUtils.isEmpty(postBackInfo.getUrl())) {
                 if (postBackInfo.getReponse().equalsIgnoreCase("true") ||
                         postBackInfo.getReponse().equalsIgnoreCase("1")) {
