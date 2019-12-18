@@ -18,21 +18,21 @@ public class ErrorProcessingService {
     @Autowired
     private ReturnFileErrorRepository returnFileErrorRepository;
 
-    public void processError(ReturnFileDTO returnFileRecord, String fileName, String errorMessage) {
-        RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(errorMessage);
-
-        ReturnFileErrorData returnFileErrorData = new ReturnFileErrorData();
-        returnFileErrorData.setFileName(fileName);
-        returnFileErrorData.setParentOrderId(returnFileRecord.getParentOrderId());
-        returnFileErrorData.setChildOrderId(returnFileRecord.getChildOrderId());
-        returnFileErrorData.setSerialNumber(returnFileRecord.getSerialNumber());
-        returnFileErrorData.setPan("");
-        returnFileErrorData.setRejectCode(fileProcessReason.getRejectCode());
-        returnFileErrorData.setRejectReason(fileProcessReason.getRejectReason());
-        returnFileErrorData.setErrorMessage(errorMessage);
-
-        returnFileErrorRepository.save(returnFileErrorData);
-    }
+//    public void processError(ReturnFileDTO returnFileRecord, String fileName, String errorMessage) {
+//        RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(errorMessage);
+//
+//        ReturnFileErrorData returnFileErrorData = new ReturnFileErrorData();
+//        returnFileErrorData.setFileName(fileName);
+//        returnFileErrorData.setParentOrderId(returnFileRecord.getParentOrderId());
+//        returnFileErrorData.setChildOrderId(returnFileRecord.getChildOrderId());
+//        returnFileErrorData.setSerialNumber(returnFileRecord.getSerialNumber());
+//        returnFileErrorData.setPan("");
+//        returnFileErrorData.setRejectCode(fileProcessReason.getRejectCode());
+//        returnFileErrorData.setRejectReason(fileProcessReason.getRejectReason());
+//        returnFileErrorData.setErrorMessage(errorMessage);
+//
+//        returnFileErrorRepository.save(returnFileErrorData);
+//    }
 
     public void processSerialNumberNotFoundError(ReturnFileDTO returnFileRecord, String fileName) {
         ReturnFileErrorData returnFileErrorData = new ReturnFileErrorData();

@@ -15,15 +15,14 @@ public class CardIssuanceStatusRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public int update(String instanceCode, String panCode) {
-        Date currentDate = new Date(System.currentTimeMillis());
+    public int updateCardStatus(String instanceCode, String panCode) {
         String sql = " UPDATE cms_cardissuance_status SET "
                 + " ccs_card_status = '14', "
-                + " ccs_lupd_date = ? "
+                + " ccs_lupd_date = SYSDATE "
                 + " WHERE ccs_inst_code = ? "
                 + " AND ccs_pan_code = ? "
                 + " AND ccs_card_status = '3' ";
 
-        return jdbcTemplate.update(sql, currentDate, instanceCode, panCode);
+        return jdbcTemplate.update(sql, instanceCode, panCode);
     }
 }

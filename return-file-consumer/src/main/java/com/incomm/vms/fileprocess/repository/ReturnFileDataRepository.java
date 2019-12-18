@@ -15,8 +15,8 @@ public class ReturnFileDataRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public int save(String instanceCode, String fileName, String rowId,
-                    ReturnFileDTO returnFileRecord, LineItemDetail lineItemDetail) {
+    public int createRecord(String instanceCode, String fileName, String rowId,
+                            ReturnFileDTO returnFileRecord, LineItemDetail lineItemDetail) {
 
         String sql = " INSERT INTO vms_returnfile_data ("
                 + " vrd_inst_code, vrd_file_name, vrd_customer_desc,"

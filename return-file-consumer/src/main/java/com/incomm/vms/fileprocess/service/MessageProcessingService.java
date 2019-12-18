@@ -30,7 +30,7 @@ public class MessageProcessingService {
     @Autowired
     private ErrorProcessingService errorProcessingService;
     @Autowired
-    private FileAggregationService fileAggregationService;
+    private OrderAggregationService fileAggregationService;
     @Autowired
     private UploadDetailRepository uploadDetailRepository;
     @Autowired
@@ -51,38 +51,51 @@ public class MessageProcessingService {
     @Value("${vms.instance-code}")
     private String instanceCode;
 
-    public void processMessage(ReturnFileDTO returnFileRecord) {
-        Map<String, String> messageHeaders = returnFileRecord.getHeaders();
+    public void processMessage(ReturnFileDTO returnFilePayload) {
+        Map<String, String> messageHeaders = returnFilePayload.getHeaders();
         String fileName = messageHeaders.get(FILE_NAME);
         String correlationId = messageHeaders.get(CORRELATION_ID);
         String recordNumber = messageHeaders.get(RECORD_NUMBER);
 
-        LOGGER.info("Processing record for file: {}  correlationId {}", fileName, correlationId);
+        String serialNumber = returnFilePayload.getSerialNumber();
 
-        Optional<LineItemDetail> lineItemDetail = lineItemDetailRepository.findLineItem(instanceCode, returnFileRecord.getSerialNumber());
+        Optional<LineItemDetail> lineItemDetail = lineItemDetailRepository.findLineItem(instanceCode, serialNumber);
+        LOGGER.info("Retrieved LineItemDetail:{} for serialNumber:{} file:{}  correlationId:{}", lineItemDetail.toString(),
+                serialNumber, fileName, correlationId);
 
         if (!lineItemDetail.isPresent()) {
-            errorProcessingService.processSerialNumberNotFoundError(returnFileRecord, fileName);
-            fileAggregationService.addConsumerCountForFailedRecord(messageHeaders);
+            errorProcessingService.processSerialNumberNotFoundError(returnFilePayload, fileName);
+            LOGGER.error("Error retrieving LineItemDetail for serialNumber:{} file: {}  correlationId:{}", serialNumber,
+                    fileName, correlationId);
         } else {
             String panCode = lineItemDetail.get().getPanCode();
-            RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(returnFileRecord.getRejectReason());
-            lineItemDetailRepository.update(returnFileRecord.getSerialNumber(), panCode, fileProcessReason);
+
+            RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(returnFilePayload.getRejectReason());
+
+            LOGGER.info("Updating LineItemDetail with serialNumber:{} panCode:{} fileProcessReason:{} file:{}  correlationId:{}",
+                    serialNumber, panCode, fileProcessReason.toString(), fileName, correlationId);
+            lineItemDetailRepository.updateStatus(serialNumber, panCode, fileProcessReason);
 
             if (SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag())) {
-                cardIssuanceStatusRepository.update(instanceCode, panCode);
+                LOGGER.info("Updating Card Status panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
+                cardIssuanceStatusRepository.updateCardStatus(instanceCode, panCode);
             }
 
-            returnFileDataRepository.save(instanceCode, fileName, recordNumber, returnFileRecord, lineItemDetail.get());
+            LOGGER.info("Creating record in vms_returnfile_data table recordNumber:{} file:{}  correlationId:{}",
+                    recordNumber, fileName, correlationId);
+            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetail.get());
 
-            boolean isDeletePanCode = isDeletePanCode(lineItemDetail, fileProcessReason);
-            lineItemDetail.get().setIsDeleteCard(isDeletePanCode);
-            fileAggregationService.saveConsumedDetail(lineItemDetail.get(), messageHeaders);
+            if (isDeleteRequired(lineItemDetail, fileProcessReason)) {
+                LOGGER.info("Deleting card for panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
+                deleteCardRepository.deleteCard(lineItemDetail.get().getPanCode());
+            }
+
+            fileAggregationService.completeProcessing(lineItemDetail.get(), fileName, correlationId);
         }
-        LOGGER.info("Done processing message filename: {} recordNumber: {} correlationId: {} ", fileName, recordNumber, correlationId);
+        LOGGER.info("Done processing message for recordNumber:{} file:{} correlationId:{} ", recordNumber, fileName, correlationId);
     }
 
-    private boolean isDeletePanCode(Optional<LineItemDetail> lineItemDetail, RejectReasonMaster fileProcessReason) {
+    private boolean isDeleteRequired(Optional<LineItemDetail> lineItemDetail, RejectReasonMaster fileProcessReason) {
         if (!SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag()) &&
                 !lineItemDetail.get().getPartnerId().equalsIgnoreCase("Replace_Partner_ID")) {
             return true;

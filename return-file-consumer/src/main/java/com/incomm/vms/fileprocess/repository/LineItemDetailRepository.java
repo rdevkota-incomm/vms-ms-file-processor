@@ -1,8 +1,8 @@
 package com.incomm.vms.fileprocess.repository;
 
 import com.incomm.vms.fileprocess.model.LineItemDetail;
+import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import com.incomm.vms.fileprocess.model.RejectReasonMaster;
-import com.incomm.vms.fileprocess.model.ReturnFileDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +60,7 @@ public class LineItemDetailRepository {
         return Optional.ofNullable(detail);
     }
 
-    public int update(String serialNUmber, String panCode, RejectReasonMaster fileProcessReason) {
+    public int updateStatus(String serialNUmber, String panCode, RejectReasonMaster fileProcessReason) {
         String sql = " UPDATE vms_line_item_dtl SET "
                 + " vli_reject_code = ? ,"
                 + " vli_reject_reason = ? ,"
@@ -80,6 +80,35 @@ public class LineItemDetailRepository {
                 (fileProcessReason.getSuccessFailureFlag().equals("N") ? " Failed - " : "Success - ") + fileProcessReason.getRejectReason(),
                 fileProcessReason.getSuccessFailureFlag(),
                 panCode);
+    }
+
+    public OrderDetailAggregate getDetailAggregateCount(LineItemDetail lineItemDetail) {
+        String sql = "SELECT COUNT(*) AS total_count, "
+                + " SUM( "
+                + "        CASE "
+                + "            WHEN vli_status IN( 'Completed', 'Shipped', 'Printer_Acknowledged', 'Rejected' "
+                + "            ) THEN "
+                + "                1 "
+                + "            ELSE "
+                + "                0 "
+                + "        END "
+                + "    ) AS printer_acknowledged_count, "
+                + "    vli_order_id, "
+                + "    vli_partner_id "
+                + " FROM vms_line_item_dtl "
+                + " WHERE  vli_order_id = ? "
+                + "   AND vli_partner_id = ? "
+                + " GROUP BY vli_order_id,  vli_partner_id ";
+        return jdbcTemplate.queryForObject(sql, new Object[]{lineItemDetail.getOrderId(), lineItemDetail.getPartnerId()},
+                (rs, rowNum) -> {
+                    OrderDetailAggregate aggregate = new OrderDetailAggregate();
+                    aggregate.setTotalCount(rs.getInt(1));
+                    aggregate.setPrinterAcknowledgedCount(rs.getInt(2));
+                    aggregate.setOrderId(rs.getString(3));
+                    aggregate.setPartnerId(rs.getString(4));
+                    return aggregate;
+                }
+        );
     }
 
 }

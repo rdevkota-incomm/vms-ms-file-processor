@@ -36,7 +36,7 @@ public class FileProcessReasonRepository {
                         return fileProcessReason;
                     });
         } catch (EmptyResultDataAccessException e) {
-            LOGGER.debug("no record returned by the reject reason sql: {} for reason {}", sql, rejectReason);
+            LOGGER.warn("No record returned by the reject reason sql: {} for reason {}", sql, rejectReason);
             fileProcessReason.setSuccessFailureFlag("N");
             fileProcessReason.setRejectReason("Rejected Reason - " + rejectReason);
         }

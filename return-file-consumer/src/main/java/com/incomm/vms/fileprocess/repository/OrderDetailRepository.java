@@ -1,7 +1,7 @@
 package com.incomm.vms.fileprocess.repository;
 
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
-import com.incomm.vms.fileprocess.model.PostbackInfo;
+import com.incomm.vms.fileprocess.model.PostBackInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +36,17 @@ public class OrderDetailRepository {
 
     }
 
-    public Optional<PostbackInfo> findPostbackInfo(String orderId, String partnerId) {
+    public Optional<PostBackInfo> findPostBackInfo(String orderId, String partnerId) {
         String sql = "SELECT vod_postback_response, vod_postback_url " +
                 " FROM vms_order_details " +
                 " WHERE vod_order_id = ? " +
                 " AND vod_partner_id = ? " +
                 " AND upper(vod_print_order) = 'TRUE' ";
-        PostbackInfo postbackInfo = null;
+        PostBackInfo postbackInfo = null;
         try {
             postbackInfo = jdbcTemplate.queryForObject(sql, new Object[]{orderId, partnerId},
                     (resultSet, rowNum) -> {
-                        PostbackInfo info = new PostbackInfo();
+                        PostBackInfo info = new PostBackInfo();
                         info.setReponse(resultSet.getString(1));
                         info.setUrl(resultSet.getString(2));
                         return info;

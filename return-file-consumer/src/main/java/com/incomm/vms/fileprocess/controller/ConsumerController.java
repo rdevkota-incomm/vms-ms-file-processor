@@ -1,6 +1,5 @@
 package com.incomm.vms.fileprocess.controller;
 
-import com.incomm.vms.fileprocess.cache.FileAggregateSummaryStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,19 +17,6 @@ public class ConsumerController {
     private final static Logger LOGGER = LoggerFactory.getLogger(ConsumerController.class);
     @Autowired
     private KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
-
-    @GetMapping("/getall")
-    @ResponseBody
-    public ConcurrentHashMap getAllConsumtionDetails() {
-        return FileAggregateSummaryStore.getAllSummaryStore();
-    }
-
-    @GetMapping("/resetCache")
-    public ConcurrentHashMap resetSummaryStore() {
-        FileAggregateSummaryStore.getAllSummaryStore().clear();
-        FileAggregateSummaryStore.syncCache();
-        return FileAggregateSummaryStore.getAllSummaryStore();
-    }
 
     @GetMapping("/stop")
     public String stop() {
