@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @SpringBootApplication
 @ComponentScan("com.incomm.vms.fileprocess")
-@EnableScheduling
+@EnableAsync
 public class FileProcessApplication implements CommandLineRunner {
     private static Logger LOGGER = LoggerFactory.getLogger(FileProcessApplication.class);
     @Autowired
@@ -25,7 +28,16 @@ public class FileProcessApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        LOGGER.info("ReturnFileApplication is started and folder is being monitored");
-        fileWatcherService.monitorFolder();
+        LOGGER.info("ReturnFileApplication is started and ready to process file");
+    }
+
+    @Bean("fileProcessTaskExecutor")
+    public TaskExecutor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(100);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setThreadNamePrefix("file-producer-");
+        return executor;
     }
 }

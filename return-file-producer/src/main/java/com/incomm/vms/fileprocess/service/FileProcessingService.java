@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
-import com.incomm.vms.fileprocess.model.ReturnFileAggregateDTO;
 import com.incomm.vms.fileprocess.model.ReturnFileDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.FileReader;
@@ -28,8 +28,10 @@ public class FileProcessingService {
     @Autowired
     private ProducerService producerService;
 
+    @Async("fileProcessTaskExecutor")
     public void parseCsvFile(Path filePath, String fileName) throws IOException {
-        LOGGER.info("File {} is being processed in path {}", fileName, filePath);
+        LOGGER.info("file:{} is being processed in path:{}", fileName, filePath);
+        long start = System.currentTimeMillis();
         CsvMapper csvMapper = new CsvMapper();
         CsvSchema schema = CsvSchema.emptySchema().withHeader();
         ObjectReader oReader = csvMapper.reader(ReturnFileDTO.class).with(schema);
@@ -41,11 +43,11 @@ public class FileProcessingService {
                 ReturnFileDTO returnFileDTO = mi.next();
                 totalRecordCount++;
                 produceRecord(returnFileDTO, correlationId, totalRecordCount, fileName);
-                LOGGER.debug("Parsed RecordCount: {} with CSV line: \n {}", totalRecordCount, returnFileDTO.toString());
             }
         }
-        LOGGER.info("Done processing File {} in path {} with CorrelationId {} fileName {}", fileName, filePath, correlationId, fileName);
-        produceAggregate(correlationId, totalRecordCount, fileName);
+        LOGGER.info("Done processing File {} in path {} totalRecordCount:{} in {} with CorrelationId:{} file:{}",
+                fileName, filePath, totalRecordCount, (System.currentTimeMillis() - start) + " MilliSec ", correlationId, fileName);
+
     }
 
     private void produceRecord(ReturnFileDTO returnFileData, UUID correlationId, int recordCount, String fileName) {
@@ -54,16 +56,8 @@ public class FileProcessingService {
         headers.put(RECORD_NUMBER, String.valueOf(recordCount));
         headers.put(CORRELATION_ID, correlationId.toString());
         returnFileData.setHeaders(headers);
+
         LOGGER.debug("Producing message with headers {}", headers);
         producerService.produceMessage(returnFileData);
-    }
-
-    private void produceAggregate(UUID correlationId, int totalRecordCount, String fileName) {
-        ReturnFileAggregateDTO fileAggregateDTO = new ReturnFileAggregateDTO();
-        fileAggregateDTO.setFileName(fileName);
-        fileAggregateDTO.setTotalRecordCount(totalRecordCount);
-        fileAggregateDTO.setCorrelationId(correlationId.toString());
-        LOGGER.debug("Producing aggregate message with headers {} for correlationId: {} fileName{}", fileAggregateDTO, correlationId, fileName);
-        producerService.produceAggregateMessage(fileAggregateDTO);
     }
 }
