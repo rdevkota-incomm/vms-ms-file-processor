@@ -1,7 +1,7 @@
 package com.incomm.vms.fileprocess.repository;
 
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
-import com.incomm.vms.fileprocess.model.PostBackInfo;
+import com.incomm.vms.fileprocess.model.PostBackDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,20 +36,23 @@ public class OrderDetailRepository {
 
     }
 
-    public Optional<PostBackInfo> findPostBackInfo(String orderId, String partnerId) {
-        String sql = "SELECT vod_postback_response, vod_postback_url " +
+    public Optional<PostBackDetail> findPostBackInfo(String orderId, String partnerId) {
+        String sql = "SELECT vod_order_id, vod_partner_id, vod_order_status, vod_postback_url, vod_postback_response " +
                 " FROM vms_order_details " +
                 " WHERE vod_order_id = ? " +
                 " AND vod_partner_id = ? " +
                 " AND upper(vod_print_order) = 'TRUE' ";
-        PostBackInfo postbackInfo = null;
+        PostBackDetail postbackInfo = null;
         try {
             postbackInfo = jdbcTemplate.queryForObject(sql, new Object[]{orderId, partnerId},
                     (resultSet, rowNum) -> {
-                        PostBackInfo info = new PostBackInfo();
-                        info.setReponse(resultSet.getString(1));
-                        info.setUrl(resultSet.getString(2));
-                        return info;
+                        PostBackDetail detail = new PostBackDetail();
+                        detail.setOrderId(resultSet.getString(1));
+                        detail.setPartnerId(resultSet.getString(2));
+                        detail.setStatus(resultSet.getString(3));
+                        detail.setUrl(resultSet.getString(4));
+                        detail.setResponse(resultSet.getString(5));
+                        return detail;
                     });
         } catch (EmptyResultDataAccessException e) {
             LOGGER.debug("No post back needed for orderId:{} partnerId:{}", orderId, partnerId);

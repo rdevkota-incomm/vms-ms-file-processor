@@ -3,7 +3,7 @@ package com.incomm.vms.fileprocess.service;
 import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
-import com.incomm.vms.fileprocess.model.PostBackInfo;
+import com.incomm.vms.fileprocess.model.PostBackDetail;
 import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
@@ -13,24 +13,22 @@ import com.incomm.vms.fileprocess.utility.DistinctPredicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import static com.incomm.vms.fileprocess.config.Constants.CORRELATION_ID;
+import static com.incomm.vms.fileprocess.config.Constants.FILE_NAME;
 
 @Service
 public class OrderAggregationService {
     private final static Logger LOGGER = LoggerFactory.getLogger(OrderAggregationService.class);
-    private ExecutorService executor = Executors.newFixedThreadPool(10);
 
-    @Autowired
-    private DeleteCardRepository deleteCardRepository;
     @Autowired
     private OrderAggregateRepository orderAggregateRepository;
     @Autowired
@@ -40,12 +38,7 @@ public class OrderAggregationService {
     @Autowired
     private LineItemDetailRepository lineItemDetailRepository;
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+    private PostBackProducerService postBackProducerService;
 
     public void completeProcessing(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         LOGGER.debug("Saving consumer DTO with file:{} correlationId:{}", fileName, correlationId);
@@ -59,10 +52,12 @@ public class OrderAggregationService {
         aggregateList.stream()
                 .forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
 
+        // filter out by combination of order Id and partner Id so that message will not be sent
+        // multiple times
         aggregateList.stream()
                 .filter(DistinctPredicate.distinctByKey(x -> x.getOrderId()))
                 .filter((DistinctPredicate.distinctByKey(y -> y.getPartnerId())))
-                .forEach(orderDetailAggregate -> sendPostBack(orderDetailAggregate, fileName, correlationId));
+                .forEach(orderDetailAggregate -> handlePostBack(orderDetailAggregate, fileName, correlationId));
     }
 
     @Transactional
@@ -82,27 +77,34 @@ public class OrderAggregationService {
         return aggregate.getTotalCount() == aggregate.getPrinterAcknowledgedCount();
     }
 
-    private void sendPostBack(OrderDetailAggregate aggregate, String fileName, String correlationId) {
-        Optional<PostBackInfo> optionalPostBack = orderDetailRepository.findPostBackInfo(aggregate.getOrderId(), aggregate.getPartnerId());
+    private void handlePostBack(OrderDetailAggregate aggregate, String fileName, String correlationId) {
+        Optional<PostBackDetail> optionalPostBack = orderDetailRepository.findPostBackInfo(aggregate.getOrderId(), aggregate.getPartnerId());
         if (optionalPostBack.isPresent()) {
-            PostBackInfo postBackInfo = optionalPostBack.get();
-//            PostBackInfo postBackInfo = new PostBackInfo();
-            LOGGER.info("Retrieved PostBackInfo:{} for file:{} correlationId:{}", postBackInfo.toString(), fileName, correlationId);
-
-//            postBackInfo.setUrl("http://10.44.0.220:9000/cxf/services/gpp/b2b/cards/dummyPost");
-//            postBackInfo.setReponse("true");
-            if (!StringUtils.isEmpty(postBackInfo.getUrl())) {
-                if (postBackInfo.getReponse().equalsIgnoreCase("true") ||
-                        postBackInfo.getReponse().equalsIgnoreCase("1")) {
-                    executor.submit(new PostBackService(restTemplate, postBackInfo.getUrl(), "some message", fileName, correlationId));
-                    LOGGER.info("PostBack Submitted for file:{} correlationId:{}", fileName, correlationId);
-                }
-            }
+            PostBackDetail postBackDetail = optionalPostBack.get();
+            LOGGER.info("Retrieved PostBackDetail:{} for file:{} correlationId:{}", postBackDetail.toString(), fileName, correlationId);
+            submitPostBack(fileName, correlationId, postBackDetail);
         } else {
             LOGGER.warn("No PostBack detail is available in the database for OrderId:{} PartnerId:{} for file:{} correlationId:{}",
                     aggregate.getOrderId(), aggregate.getPartnerId(), fileName, correlationId);
         }
 
+    }
+
+    private void submitPostBack(String fileName, String correlationId, PostBackDetail postBackDetail) {
+        if (!StringUtils.isEmpty(postBackDetail.getUrl())) {
+            if (postBackDetail.getResponse().equalsIgnoreCase("true") || postBackDetail.getResponse().equals("1")) {
+                postBackDetail.setHeaders(setPostBackHeaders(fileName, correlationId));
+                postBackProducerService.send(postBackDetail);
+                LOGGER.info("PostBack Submitted for file:{} correlationId:{}", fileName, correlationId);
+            }
+        }
+    }
+
+    private Map<String, String> setPostBackHeaders(String fileName, String correlationId) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put(FILE_NAME, fileName);
+        headers.put(CORRELATION_ID, correlationId);
+        return headers;
     }
 
 }
