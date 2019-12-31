@@ -1,4 +1,4 @@
-package com.incomm.vms.fileprocess.controller;
+package com.incomm.vms.postback.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

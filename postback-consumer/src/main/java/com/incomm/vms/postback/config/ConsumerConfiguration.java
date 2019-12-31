@@ -1,7 +1,6 @@
 package com.incomm.vms.postback.config;
 
 
-
 import com.incomm.vms.postback.service.ConsumerService;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

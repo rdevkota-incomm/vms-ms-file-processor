@@ -1,8 +1,7 @@
 package com.incomm.vms.fileprocess.config;
 
 public class Constants {
-    private Constants() {
-    }
+    private Constants() {}
 
     public final static String SERIAL_NUMBER_NOT_FOUND = "Serial Number not found/Closed";
 
@@ -17,6 +16,5 @@ public class Constants {
     public final static String CONSUMER_CONTAINER_GROUP = "printer-awk-group";
 
     public final static String POST_BACK_TASK_EXECUTOR_POOL = "POST_BACK_TASK_EXECUTOR_POOL";
-
 
 }

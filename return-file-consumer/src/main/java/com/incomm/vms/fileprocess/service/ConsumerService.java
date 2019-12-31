@@ -16,15 +16,10 @@ public class ConsumerService extends Thread {
 
     @Autowired
     private MessageProcessingService messageProcessingService;
-    @Autowired
-    private OrderAggregationService fileAggregationService;
 
     @KafkaListener(topics = "${vms.printer-awk.topic}", id = CONSUMER_CONTAINER_ID, containerGroup = CONSUMER_CONTAINER_GROUP)
     public void consumeMessage(ConsumerRecord<?, ?> consumerRecord, Acknowledgment acknowledgment) {
-        Gson gson = new Gson();
-        String payload = consumerRecord.value().toString();
-        ReturnFileDTO returnFileDTO = gson.fromJson(payload, ReturnFileDTO.class);
-
+        ReturnFileDTO returnFileDTO = deserializePayload(consumerRecord);
         String correlationId = returnFileDTO.getHeaders().get(CORRELATION_ID);
         String fileName = returnFileDTO.getHeaders().get(FILE_NAME);
 
@@ -37,5 +32,11 @@ public class ConsumerService extends Thread {
             LOGGER.error("Error processing payload {} with error: {} for correlationId:{} filename:{}", returnFileDTO.toString(),
                     e.getLocalizedMessage(), correlationId, fileName, e);
         }
+    }
+
+    private ReturnFileDTO deserializePayload(ConsumerRecord<?, ?> consumerRecord) {
+        Gson gson = new Gson();
+        String payload = consumerRecord.value().toString();
+        return gson.fromJson(payload, ReturnFileDTO.class);
     }
 }

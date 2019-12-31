@@ -7,10 +7,7 @@ import com.incomm.vms.fileprocess.repository.CardIssuanceStatusRepository;
 import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.FileProcessReasonRepository;
 import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
-import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
-import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
 import com.incomm.vms.fileprocess.repository.ReturnFileDataRepository;
-import com.incomm.vms.fileprocess.repository.UploadDetailRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +22,12 @@ import static com.incomm.vms.fileprocess.config.Constants.*;
 @Service
 public class MessageProcessingService {
     private final static Logger LOGGER = LoggerFactory.getLogger(MessageProcessingService.class);
-    public static final String SUCCESS_FLAG = "Y";
+    private static final String SUCCESS_FLAG = "Y";
 
     @Autowired
     private ErrorProcessingService errorProcessingService;
     @Autowired
     private OrderAggregationService fileAggregationService;
-    @Autowired
-    private UploadDetailRepository uploadDetailRepository;
     @Autowired
     private LineItemDetailRepository lineItemDetailRepository;
     @Autowired
@@ -42,16 +37,12 @@ public class MessageProcessingService {
     @Autowired
     private ReturnFileDataRepository returnFileDataRepository;
     @Autowired
-    private OrderLineItemRepository orderLineItemRepository;
-    @Autowired
-    private OrderDetailRepository orderDetailRepository;
-    @Autowired
     private DeleteCardRepository deleteCardRepository;
 
     @Value("${vms.instance-code}")
     private String instanceCode;
 
-    public void processMessage(ReturnFileDTO returnFilePayload) {
+    protected void processMessage(ReturnFileDTO returnFilePayload) {
         Map<String, String> messageHeaders = returnFilePayload.getHeaders();
         String fileName = messageHeaders.get(FILE_NAME);
         String correlationId = messageHeaders.get(CORRELATION_ID);
@@ -65,6 +56,7 @@ public class MessageProcessingService {
 
         if (!lineItemDetail.isPresent()) {
             errorProcessingService.processSerialNumberNotFoundError(returnFilePayload, fileName);
+
             LOGGER.error("Error retrieving LineItemDetail for serialNumber:{} file: {}  correlationId:{}", serialNumber,
                     fileName, correlationId);
         } else {
@@ -74,8 +66,8 @@ public class MessageProcessingService {
 
             LOGGER.info("Updating LineItemDetail with serialNumber:{} panCode:{} fileProcessReason:{} file:{}  correlationId:{}",
                     serialNumber, panCode, fileProcessReason.toString(), fileName, correlationId);
-            lineItemDetailRepository.updateStatus(serialNumber, panCode, fileProcessReason);
 
+            lineItemDetailRepository.updateStatus(serialNumber, panCode, fileProcessReason);
             if (SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag())) {
                 LOGGER.info("Updating Card Status panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
                 cardIssuanceStatusRepository.updateCardStatus(instanceCode, panCode);
@@ -83,9 +75,10 @@ public class MessageProcessingService {
 
             LOGGER.info("Creating record in vms_returnfile_data table recordNumber:{} file:{}  correlationId:{}",
                     recordNumber, fileName, correlationId);
+
             returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetail.get());
 
-            if (isDeleteRequired(lineItemDetail, fileProcessReason)) {
+            if (isDeleteRequired(lineItemDetail.get(), fileProcessReason)) {
                 LOGGER.info("Deleting card for panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
                 deleteCardRepository.deleteCard(lineItemDetail.get().getPanCode());
             }
@@ -95,9 +88,9 @@ public class MessageProcessingService {
         LOGGER.info("Done processing message for recordNumber:{} file:{} correlationId:{} ", recordNumber, fileName, correlationId);
     }
 
-    private boolean isDeleteRequired(Optional<LineItemDetail> lineItemDetail, RejectReasonMaster fileProcessReason) {
+    private boolean isDeleteRequired(LineItemDetail lineItemDetail, RejectReasonMaster fileProcessReason) {
         if (!SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag()) &&
-                !lineItemDetail.get().getPartnerId().equalsIgnoreCase("Replace_Partner_ID")) {
+                !lineItemDetail.getPartnerId().equalsIgnoreCase("Replace_Partner_ID")) {
             return true;
         }
         return false;

@@ -4,7 +4,6 @@ import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import com.incomm.vms.fileprocess.model.OrderDetailCount;
 import com.incomm.vms.fileprocess.model.PostBackDetail;
-import com.incomm.vms.fileprocess.repository.DeleteCardRepository;
 import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
@@ -40,7 +39,7 @@ public class OrderAggregationService {
     @Autowired
     private PostBackProducerService postBackProducerService;
 
-    public void completeProcessing(LineItemDetail lineItemDetail, String fileName, String correlationId) {
+    protected void completeProcessing(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         LOGGER.debug("Saving consumer DTO with file:{} correlationId:{}", fileName, correlationId);
         if (isConsumptionComplete(lineItemDetail, fileName, correlationId)) {
             aggregateSummary(lineItemDetail, fileName, correlationId);
@@ -49,8 +48,7 @@ public class OrderAggregationService {
 
     protected void aggregateSummary(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(lineItemDetail);
-        aggregateList.stream()
-                .forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
+        aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
 
         // filter out by combination of order Id and partner Id so that message will not be sent
         // multiple times

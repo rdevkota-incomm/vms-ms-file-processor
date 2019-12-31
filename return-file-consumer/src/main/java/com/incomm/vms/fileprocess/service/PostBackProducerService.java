@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import static com.incomm.vms.fileprocess.config.Constants.POST_BACK_TASK_EXECUTOR_POOL;
 
+
 @Service
 public class PostBackProducerService {
     private final static Logger LOGGER = LoggerFactory.getLogger(PostBackProducerService.class);
@@ -22,10 +23,10 @@ public class PostBackProducerService {
     private KafkaTemplate<String, String> kafkaTemplate;
 
     @Async(POST_BACK_TASK_EXECUTOR_POOL)
-    public void send(PostBackDetail postBackDetail) {
+    protected void send(PostBackDetail postBackDetail) {
         try {
             kafkaTemplate.send(postBackTopic, postBackDetail.toString());
-            LOGGER.info("Postback message send complete PostBackDetail: {} for file:{} correlationId", postBackDetail);
+            LOGGER.info("Postback message send complete PostBackDetail: {} ", postBackDetail);
         } catch (Exception e) {
             LOGGER.error("Postback Failed for PostBackDetail: {} ", postBackDetail, e);
         }

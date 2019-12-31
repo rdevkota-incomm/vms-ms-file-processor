@@ -1,7 +1,7 @@
 package com.incomm.vms.postback.service;
 
 import com.google.gson.Gson;
-import com.incomm.vms.common.model.PostBackDetail;
+import com.incomm.vms.postback.model.PostBackDetail;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +10,8 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.web.client.RestTemplate;
 
-import static com.incomm.vms.common.config.Constants.CORRELATION_ID;
-import static com.incomm.vms.common.config.Constants.FILE_NAME;
+import static com.incomm.vms.postback.config.Constants.CORRELATION_ID;
+import static com.incomm.vms.postback.config.Constants.FILE_NAME;
 
 
 public class ConsumerService extends Thread {
@@ -22,7 +22,7 @@ public class ConsumerService extends Thread {
     @Autowired
     private PostBackService postBackService;
 
-    @KafkaListener(topics = "${vms.post-back.topic}")
+    @KafkaListener(topics = "${vms.post-back.topic}", id = "${vms.post-back.topic}" + "_id", containerGroup = "${vms.post-back.topic}" + "_grp")
     public void consumeMessage(ConsumerRecord<?, ?> consumerRecord, Acknowledgment acknowledgment) {
         Gson gson = new Gson();
         String payload = consumerRecord.value().toString();
