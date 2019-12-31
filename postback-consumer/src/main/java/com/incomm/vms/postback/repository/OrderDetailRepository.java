@@ -6,12 +6,9 @@ import com.incomm.vms.postback.model.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +48,7 @@ public class OrderDetailRepository {
             order.setOfacFlag((String) record.get("vod_ofac_flag"));
 
             LineItem lineItem = LineItem.builder()
-                    .lineItemID((String) record.get("vol_line_item_id"))
+                    .lineItemId((String) record.get("vol_line_item_id"))
                     .status((String) record.get("vol_order_status"))
                     .responseMessage((String) record.get("vol_return_file_msg"))
                     .responseCode((String) record.get("resp_code"))

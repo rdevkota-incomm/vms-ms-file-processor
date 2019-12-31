@@ -8,7 +8,7 @@ import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
-import com.incomm.vms.fileprocess.utility.DistinctPredicate;
+import com.incomm.vms.fileprocess.utility.DistinctPredicateFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,8 +53,8 @@ public class OrderAggregationService {
         // filter out by combination of order Id and partner Id so that message will not be sent
         // multiple times
         aggregateList.stream()
-                .filter(DistinctPredicate.distinctByKey(x -> x.getOrderId()))
-                .filter((DistinctPredicate.distinctByKey(y -> y.getPartnerId())))
+                .filter(DistinctPredicateFunction.distinctByKey(x -> x.getOrderId()))
+                .filter((DistinctPredicateFunction.distinctByKey(y -> y.getPartnerId())))
                 .forEach(orderDetailAggregate -> handlePostBack(orderDetailAggregate, fileName, correlationId));
     }
 

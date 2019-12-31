@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @Builder
 public class LineItem {
-    private String lineItemID;
+    private String lineItemId;
     private String responseCode;
     private String responseMessage;
     private String status;
