@@ -50,17 +50,18 @@ public class MessageProcessingService {
 
         String serialNumber = returnFilePayload.getSerialNumber();
 
-        Optional<LineItemDetail> lineItemDetail = lineItemDetailRepository.findLineItem(instanceCode, serialNumber);
-        LOGGER.info("Retrieved LineItemDetail:{} for serialNumber:{} file:{}  correlationId:{}", lineItemDetail.toString(),
+        Optional<LineItemDetail> lineItemDetailOptional = lineItemDetailRepository.findLineItem(instanceCode, serialNumber);
+        LOGGER.info("Retrieved LineItemDetail:{} for serialNumber:{} file:{}  correlationId:{}", lineItemDetailOptional.toString(),
                 serialNumber, fileName, correlationId);
 
-        if (!lineItemDetail.isPresent()) {
+        if (!lineItemDetailOptional.isPresent()) {
             errorProcessingService.processSerialNumberNotFoundError(returnFilePayload, fileName);
 
             LOGGER.error("Error retrieving LineItemDetail for serialNumber:{} file: {}  correlationId:{}", serialNumber,
                     fileName, correlationId);
         } else {
-            String panCode = lineItemDetail.get().getPanCode();
+            LineItemDetail lineItemDetail = lineItemDetailOptional.get();
+            String panCode = lineItemDetail.getPanCode();
 
             RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(returnFilePayload.getRejectReason());
 
@@ -76,14 +77,14 @@ public class MessageProcessingService {
             LOGGER.info("Creating record in vms_returnfile_data table recordNumber:{} file:{}  correlationId:{}",
                     recordNumber, fileName, correlationId);
 
-            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetail.get());
+            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetailOptional.get());
 
-            if (isDeleteRequired(lineItemDetail.get(), fileProcessReason)) {
+            if (isDeleteRequired(lineItemDetailOptional.get(), fileProcessReason)) {
                 LOGGER.info("Deleting card for panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
-                deleteCardRepository.deleteCard(lineItemDetail.get().getPanCode());
+                deleteCardRepository.deleteCard(lineItemDetailOptional.get().getPanCode());
             }
 
-            fileAggregationService.completeProcessing(lineItemDetail.get(), fileName, correlationId);
+            fileAggregationService.completeProcessing(lineItemDetailOptional.get(), fileName, correlationId);
         }
         LOGGER.info("Done processing message for recordNumber:{} file:{} correlationId:{} ", recordNumber, fileName, correlationId);
     }

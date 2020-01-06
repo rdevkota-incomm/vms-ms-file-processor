@@ -100,14 +100,12 @@ public class LineItemDetailRepository {
                 + "   AND vli_partner_id = ? "
                 + " GROUP BY vli_order_id,  vli_partner_id ";
         return jdbcTemplate.queryForObject(sql, new Object[]{lineItemDetail.getOrderId(), lineItemDetail.getPartnerId()},
-                (rs, rowNum) -> {
-                    OrderDetailAggregate aggregate = new OrderDetailAggregate();
-                    aggregate.setTotalCount(rs.getInt(1));
-                    aggregate.setPrinterAcknowledgedCount(rs.getInt(2));
-                    aggregate.setOrderId(rs.getString(3));
-                    aggregate.setPartnerId(rs.getString(4));
-                    return aggregate;
-                }
+                (rs, rowNum) -> OrderDetailAggregate.builder()
+                        .totalCount(rs.getInt(1))
+                        .printerAcknowledgedCount(rs.getInt(2))
+                        .orderId(rs.getString(3))
+                        .partnerId(rs.getString(4))
+                        .build()
         );
     }
 

@@ -45,15 +45,13 @@ public class OrderDetailRepository {
         PostBackDetail postbackInfo = null;
         try {
             postbackInfo = jdbcTemplate.queryForObject(sql, new Object[]{orderId, partnerId},
-                    (resultSet, rowNum) -> {
-                        PostBackDetail detail = new PostBackDetail();
-                        detail.setOrderId(resultSet.getString(1));
-                        detail.setPartnerId(resultSet.getString(2));
-                        detail.setStatus(resultSet.getString(3));
-                        detail.setUrl(resultSet.getString(4));
-                        detail.setResponse(resultSet.getString(5));
-                        return detail;
-                    });
+                    (resultSet, rowNum) -> PostBackDetail.builder()
+                            .orderId(resultSet.getString(1))
+                            .partnerId(resultSet.getString(2))
+                            .status(resultSet.getString(3))
+                            .url(resultSet.getString(4))
+                            .response(resultSet.getString(5))
+                            .build());
         } catch (EmptyResultDataAccessException e) {
             LOGGER.debug("No post back needed for orderId:{} partnerId:{}", orderId, partnerId);
         }

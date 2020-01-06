@@ -49,6 +49,7 @@ public class OrderAggregationService {
     protected void completeProcessing(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         LOGGER.debug("Saving consumer DTO with file:{} correlationId:{}", fileName, correlationId);
         if (isConsumptionComplete(lineItemDetail, fileName, correlationId)) {
+            uploadDetailRepository.aggregateFileDetail(instanceCode, "1", fileName);
             aggregateSummary(lineItemDetail, fileName, correlationId);
         }
     }
@@ -57,7 +58,6 @@ public class OrderAggregationService {
         List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(lineItemDetail);
 
         aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
-        uploadDetailRepository.aggregateFileDetail(instanceCode, "1", fileName);
         // filter out by combination of order Id and partner Id so that message will not be sent multiple times
         aggregateList.stream()
                 .filter(DistinctPredicateFunction.distinctByKey(x -> x.getOrderId()))

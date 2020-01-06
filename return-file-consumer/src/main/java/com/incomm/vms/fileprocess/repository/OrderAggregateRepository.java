@@ -3,7 +3,6 @@ package com.incomm.vms.fileprocess.repository;
 import com.incomm.vms.fileprocess.model.LineItemDetail;
 import com.incomm.vms.fileprocess.model.OrderDetailAggregate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -63,15 +62,15 @@ public class OrderAggregateRepository {
     }
 
     private OrderDetailAggregate toOrderDetailAggregate(ResultSet rs) throws SQLException {
-        OrderDetailAggregate agg = new OrderDetailAggregate();
-        agg.setTotalCount(rs.getInt(1));
-        agg.setPrinterAcknowledgedCount(rs.getInt(2));
-        agg.setRejectCount(rs.getInt(3));
-        agg.setRejectReason(rs.getString(4));
-        agg.setOrderId(rs.getString(5));
-        agg.setPartnerId(rs.getString(6));
-        agg.setLineItemId(rs.getString(7));
-        return agg;
+        return OrderDetailAggregate.builder()
+                .totalCount(rs.getInt(1))
+                .printerAcknowledgedCount(rs.getInt(2))
+                .rejectCount(rs.getInt(3))
+                .rejectReason(rs.getString(4))
+                .orderId(rs.getString(5))
+                .partnerId(rs.getString(6))
+                .lineItemId(rs.getString(7))
+                .build();
     }
 
 }

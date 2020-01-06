@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.UnknownHostException;
+
 @RestController
 @RequestMapping(value = "/postback", produces = {"application/json"})
 public class PostBackController {
@@ -23,7 +25,7 @@ public class PostBackController {
     private PostBackService postBackService;
 
     @PostMapping(path = "/process", produces = "application/json; charset=UTF-8")
-    public ResponseEntity processMessage(@RequestBody PostBackDetail postBackDetail) {
+    public ResponseEntity processMessage(@RequestBody PostBackDetail postBackDetail) throws UnknownHostException {
         String response = postBackService.submit(restTemplate, postBackDetail);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
