@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.text.ParseException;
 
 @RestController
 @RequestMapping(value = "/fileprocessor", produces = {"application/json"})
@@ -28,10 +29,10 @@ public class FileProcessController {
     public ResponseEntity<Object> processFile(@RequestBody @Valid FileProcessRequest fileProcessRequest) {
         LOGGER.info("Received file process request {} for file:{}", fileProcessRequest.toString(), fileProcessRequest.getFileName());
         try {
-            fileProcessingService.parseCsvFile(Paths.get(fileProcessRequest.getFilePath()), fileProcessRequest.getFileName());
+            fileProcessingService.processFile(Paths.get(fileProcessRequest.getFilePath()), fileProcessRequest.getFileName());
             return new ResponseEntity<>("File processing request is accepted for: " + fileProcessRequest.toString(),
                     HttpStatus.ACCEPTED);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error("Error processing file for file:{}", fileProcessRequest.getFileName(), e);
             return new ResponseEntity<>("Error processing request with exception: " + e.getLocalizedMessage(),
                     HttpStatus.NOT_ACCEPTABLE);

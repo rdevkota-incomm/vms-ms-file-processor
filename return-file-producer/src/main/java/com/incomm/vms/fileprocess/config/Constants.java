@@ -17,4 +17,6 @@ public class Constants {
 
     public final static String POST_BACK_TASK_EXECUTOR_POOL = "POST_BACK_TASK_EXECUTOR_POOL";
 
+    public final static String FILE_SEPARATOR = "file.separator";
+
 }

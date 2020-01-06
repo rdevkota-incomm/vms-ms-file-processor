@@ -39,7 +39,7 @@ public class FileWatcherService {
                 LOGGER.info("New File has been received {}", fileName);
                 try {
                     long start = System.currentTimeMillis();
-                    fileProcessingService.parseCsvFile(filePath, event.context().toString());
+                    fileProcessingService.processFile(filePath, event.context().toString());
                     LOGGER.info("Complete parsing file {} in {} Millis", fileName, (System.currentTimeMillis() - start));
                 } catch(Exception e) {
                     LOGGER.error("Error processing file {}", e.getLocalizedMessage(), e);
