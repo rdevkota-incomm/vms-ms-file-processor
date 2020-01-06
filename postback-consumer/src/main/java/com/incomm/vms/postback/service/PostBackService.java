@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
 
 import static com.incomm.vms.postback.config.Constants.CORRELATION_ID;
@@ -28,11 +30,16 @@ public class PostBackService {
     private OrderStatusService orderStatusService;
 
     @Async(POST_BACK_TASK_EXECUTOR_POOL)
-    public String submit(RestTemplate restTemplate, PostBackDetail postBackDetail) throws RestClientException {
+    public String submit(RestTemplate restTemplate, PostBackDetail postBackDetail) throws RestClientException, UnknownHostException {
         HttpHeaders headers = new HttpHeaders();
-        headers.set("x-incfs-ip", "IPADDRESS");
+        headers.set("x-incfs-ip", InetAddress.getLocalHost().toString());
         headers.set("x-incfs-date", String.valueOf(new Date()));
         headers.set("x-incfs-correlationid", postBackDetail.getHeaders().get(CORRELATION_ID));
+        headers.add("x-incfs-partnerid", postBackDetail.getPartnerId());
+        // TODO
+        // channels
+//        headers.add("x-incfs-channel", channel);
+//        headers.add("x-incfs-channel-identifier", channel);
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         Order order = orderStatusService.getOrderDetails(postBackDetail.getOrderId(), postBackDetail.getPartnerId());

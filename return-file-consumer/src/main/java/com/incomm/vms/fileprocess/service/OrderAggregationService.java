@@ -8,10 +8,12 @@ import com.incomm.vms.fileprocess.repository.LineItemDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderAggregateRepository;
 import com.incomm.vms.fileprocess.repository.OrderDetailRepository;
 import com.incomm.vms.fileprocess.repository.OrderLineItemRepository;
+import com.incomm.vms.fileprocess.repository.UploadDetailRepository;
 import com.incomm.vms.fileprocess.utility.DistinctPredicateFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +40,11 @@ public class OrderAggregationService {
     private LineItemDetailRepository lineItemDetailRepository;
     @Autowired
     private PostBackProducerService postBackProducerService;
+    @Autowired
+    private UploadDetailRepository uploadDetailRepository;
+
+    @Value("${vms.instance-code}")
+    private String instanceCode;
 
     protected void completeProcessing(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         LOGGER.debug("Saving consumer DTO with file:{} correlationId:{}", fileName, correlationId);
@@ -48,10 +55,10 @@ public class OrderAggregationService {
 
     protected void aggregateSummary(LineItemDetail lineItemDetail, String fileName, String correlationId) {
         List<OrderDetailAggregate> aggregateList = orderAggregateRepository.getLineItemSummary(lineItemDetail);
-        aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
 
-        // filter out by combination of order Id and partner Id so that message will not be sent
-        // multiple times
+        aggregateList.stream().forEach(orderDetailAggregate -> updateOrder(orderDetailAggregate, fileName, correlationId));
+        uploadDetailRepository.aggregateFileDetail(instanceCode, "1", fileName);
+        // filter out by combination of order Id and partner Id so that message will not be sent multiple times
         aggregateList.stream()
                 .filter(DistinctPredicateFunction.distinctByKey(x -> x.getOrderId()))
                 .filter((DistinctPredicateFunction.distinctByKey(y -> y.getPartnerId())))
