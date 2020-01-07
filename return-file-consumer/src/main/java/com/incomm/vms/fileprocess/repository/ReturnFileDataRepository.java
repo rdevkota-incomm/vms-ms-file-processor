@@ -27,6 +27,7 @@ public class ReturnFileDataRepository {
                 + " vrd_lupd_user, vrd_lupd_date, vrd_lineitem_id ) "
                 + " VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, to_date(?, 'mm/dd/yyyy'), ?, ?, ?, ?, ?, ?, SYSDATE, ?, SYSDATE, ?)";
 
+        LOGGER.debug("Executing query {}", sql);
         return jdbcTemplate.update(sql,
                 instanceCode, fileName, returnFileRecord.getCustomer(),
                 returnFileRecord.getShipSuffix(), returnFileRecord.getParentOrderId(),

@@ -62,6 +62,9 @@ public class UploadDetailRepository {
                 "            GROUP BY  " +
                 "                vrd_file_name  " +
                 "        )";
+
+        LOGGER.debug("Executing query \n {}", sql);
+
         return jdbcTemplate.update(sql, instanceCode, fileName, userId, userId, fileName, fileName);
     }
 

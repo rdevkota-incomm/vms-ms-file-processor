@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Date;
-
 @Repository
 public class CardIssuanceStatusRepository {
     private final static Logger LOGGER = LoggerFactory.getLogger(CardIssuanceStatusRepository.class);
@@ -22,7 +20,7 @@ public class CardIssuanceStatusRepository {
                 + " WHERE ccs_inst_code = ? "
                 + " AND ccs_pan_code = ? "
                 + " AND ccs_card_status = '3' ";
-
+        LOGGER.debug("Executing sql {}", sql);
         return jdbcTemplate.update(sql, instanceCode, panCode);
     }
 }

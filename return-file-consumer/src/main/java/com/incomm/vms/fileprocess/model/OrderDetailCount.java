@@ -1,7 +1,6 @@
 package com.incomm.vms.fileprocess.model;
 
 import com.google.gson.Gson;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

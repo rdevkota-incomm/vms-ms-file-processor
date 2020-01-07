@@ -22,11 +22,12 @@ dependencies {
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.7"
 
     compile 'com.oracle:ojdbc6:11.2.0'
-//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-jdbc', version: '2.2.0.RELEASE'
+
+    compileOnly 'org.projectlombok:lombok:1.18.8'
+    annotationProcessor 'org.projectlombok:lombok:1.18.8'
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-//    implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-dependencies:2.2.0.RELEASE'
     implementation 'org.apache.kafka:kafka-streams'
     implementation 'org.springframework.kafka:spring-kafka'
