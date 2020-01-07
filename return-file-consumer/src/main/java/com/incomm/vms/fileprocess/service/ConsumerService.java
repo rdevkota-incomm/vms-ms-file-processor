@@ -17,7 +17,8 @@ public class ConsumerService extends Thread {
     @Autowired
     private MessageProcessingService messageProcessingService;
 
-    @KafkaListener(topics = "${vms.printer-awk.topic}", id = CONSUMER_CONTAINER_ID, containerGroup = CONSUMER_CONTAINER_GROUP)
+//    @KafkaListener(topics = "${vms.printer-awk.topic}", id = CONSUMER_CONTAINER_ID, containerGroup = CONSUMER_CONTAINER_GROUP)
+    @KafkaListener(topics = "${vms.printer-awk.topic}", id = CONSUMER_CONTAINER_ID)
     public void consumeMessage(ConsumerRecord<?, ?> consumerRecord, Acknowledgment acknowledgment) {
         ReturnFileDTO returnFileDTO = deserializePayload(consumerRecord);
         String correlationId = returnFileDTO.getHeaders().get(CORRELATION_ID);

@@ -33,9 +33,6 @@ public class ConsumerConfiguration {
     @Value("${spring.kafka.consumer.group-id}")
     private String consumerGroup;
 
-    @Value("${spring.kafka.consumer.max.poll.interval.ms}")
-    private String pollInterval;
-
     @Bean
     public Map<String, Object> consumerConfigs() {
         Map<String, Object> props = new HashMap<>();
@@ -45,11 +42,12 @@ public class ConsumerConfiguration {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         // allows a pool of processes to divide the work of consuming and processing records
         props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroup);
-        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, Integer.parseInt(pollInterval));
         props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 1);
         // automatically reset the offset to the earliest offset
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        props.put("session.timeout.ms", 25000);
+
 
         return props;
     }
