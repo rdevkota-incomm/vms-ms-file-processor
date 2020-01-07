@@ -60,8 +60,7 @@ public class MessageProcessingService {
             LOGGER.error("Error retrieving LineItemDetail for serialNumber:{} file: {}  correlationId:{}", serialNumber,
                     fileName, correlationId);
         } else {
-            LineItemDetail lineItemDetail = lineItemDetailOptional.get();
-            String panCode = lineItemDetail.getPanCode();
+            String panCode = lineItemDetailOptional.get().getPanCode();
 
             RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(returnFilePayload.getRejectReason());
 
@@ -77,14 +76,14 @@ public class MessageProcessingService {
             LOGGER.info("Creating record in vms_returnfile_data table recordNumber:{} file:{}  correlationId:{}",
                     recordNumber, fileName, correlationId);
 
-            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetailOptional.get());
-
             if (isDeleteRequired(lineItemDetailOptional.get(), fileProcessReason)) {
                 LOGGER.info("Deleting card for panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
                 deleteCardRepository.deleteCard(lineItemDetailOptional.get().getPanCode());
             }
 
+            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetailOptional.get());
             fileAggregationService.completeProcessing(lineItemDetailOptional.get(), fileName, correlationId);
+
         }
         LOGGER.info("Done processing message for recordNumber:{} file:{} correlationId:{} ", recordNumber, fileName, correlationId);
     }
