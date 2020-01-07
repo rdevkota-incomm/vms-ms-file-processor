@@ -25,7 +25,7 @@ import static com.incomm.vms.fileprocess.config.Constants.*;
 
 @Service
 public class FileProcessingService {
-    private final static Logger LOGGER = LoggerFactory.getLogger(FileProcessingService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileProcessingService.class);
 
     @Autowired
     private ProducerService producerService;
@@ -39,18 +39,22 @@ public class FileProcessingService {
         Path file = Paths.get(filePath + System.getProperty(FILE_SEPARATOR) + fileName);
         try {
             validationService.validateFile(file);
-            try {
-                Path newFile = fileService.moveFileToProcessingFolder(file);
-                parseCsvFile(newFile);
-            } catch (Exception e) {
-                LOGGER.error("Error processing the file:{}", file, e);
-            }
+            moveAndParseFile(file);
         } catch (FileValidationException e) {
             LOGGER.error("File validation failed for file:{}", file, e);
         }
     }
 
-    public void parseCsvFile(Path file) throws IOException {
+    private void moveAndParseFile(Path file) {
+        try {
+            Path newFile = fileService.moveFileToProcessingFolder(file);
+            parseCsvFile(newFile);
+        } catch (Exception e) {
+            LOGGER.error("Error processing the file:{}", file, e);
+        }
+    }
+
+    private void parseCsvFile(Path file) throws IOException {
         LOGGER.info("file:{} is being processed", file);
         long start = System.currentTimeMillis();
         CsvMapper csvMapper = new CsvMapper();
@@ -66,8 +70,8 @@ public class FileProcessingService {
                 produceRecord(returnFileDTO, correlationId, recordCount, file);
             }
         }
-        LOGGER.info("Done processing File {} recordCount:{} in {} with CorrelationId:{} ",
-                file, recordCount, (System.currentTimeMillis() - start) + " MilliSec ", correlationId);
+        LOGGER.info("Done processing File {} recordCount:{} in {} MilliSec with CorrelationId:{} ",
+                file, recordCount, (System.currentTimeMillis() - start), correlationId);
 
     }
 

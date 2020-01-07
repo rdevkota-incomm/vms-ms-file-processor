@@ -19,16 +19,15 @@ import static com.incomm.vms.fileprocess.config.Constants.FILE_SEPARATOR;
 
 @Service
 public class FileService {
-    private final static Logger LOGGER = LoggerFactory.getLogger(FileService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileService.class);
 
     @Value("${vms.printer-ack.delelete.folder}")
     private String deleteFolder;
 
     public Path moveFileToProcessingFolder(Path filePath) throws ParseException, IOException {
-        LOGGER.info("Moving file:{}", filePath.toString());
         String destinationFolder = getDestinationFolder();
         File processingFolder = new File(deleteFolder + System.getProperty(FILE_SEPARATOR) + destinationFolder);
-        LOGGER.info("Moving file:{} to processing folder:{}", filePath.toString(), processingFolder);
+        LOGGER.info("Moving file:{} to processing folder:{}", filePath, processingFolder);
         if (!processingFolder.isDirectory()) {
             processingFolder.mkdirs();
         }
@@ -37,7 +36,7 @@ public class FileService {
         LOGGER.info("file:{} is moved and ready for processing", newFile);
 
         // TODO
-        // rejected file logic
+        // rejected file logic do we need this?
 
         return newFile;
     }

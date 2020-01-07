@@ -17,7 +17,7 @@ import java.nio.file.WatchService;
 
 @Service
 public class FileWatcherService {
-    private final static Logger LOGGER = LoggerFactory.getLogger(FileWatcherService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileWatcherService.class);
 
     @Autowired
     private FileProcessingService fileProcessingService;

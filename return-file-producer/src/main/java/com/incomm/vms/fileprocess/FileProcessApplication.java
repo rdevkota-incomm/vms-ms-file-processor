@@ -17,7 +17,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @ComponentScan("com.incomm.vms.fileprocess")
 @EnableAsync
 public class FileProcessApplication implements CommandLineRunner {
-    private static Logger LOGGER = LoggerFactory.getLogger(FileProcessApplication.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileProcessApplication.class);
+
     @Autowired
     private FileWatcherService fileWatcherService;
 

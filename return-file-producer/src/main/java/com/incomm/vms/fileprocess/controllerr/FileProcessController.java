@@ -18,14 +18,14 @@ import java.nio.file.Paths;
 @RestController
 @RequestMapping(value = "/fileprocessor", produces = {"application/json"})
 public class FileProcessController {
-    private final static Logger LOGGER = LoggerFactory.getLogger(FileProcessController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileProcessController.class);
 
     @Autowired
     private FileProcessingService fileProcessingService;
 
     @PostMapping(path = "/process")
     public ResponseEntity<Object> processFile(@RequestBody @Valid FileProcessRequest fileProcessRequest) {
-        LOGGER.info("Received file process request {} for file:{}", fileProcessRequest.toString(), fileProcessRequest.getFileName());
+        LOGGER.info("Received file process request {} for file:{}", fileProcessRequest, fileProcessRequest.getFileName());
         try {
             fileProcessingService.processFile(Paths.get(fileProcessRequest.getFilePath()), fileProcessRequest.getFileName());
             return new ResponseEntity<>("File processing request is accepted for: " + fileProcessRequest.toString(),

@@ -15,7 +15,7 @@ public class ValidationService {
 
     private void checkDuplicateFile(Path file) throws FileValidationException {
         // this has to go to the database to check for duplicate file
-        // is it necessary
+        // is it necessary?
     }
 
     private void validateFileLength(Path file) throws FileValidationException {
