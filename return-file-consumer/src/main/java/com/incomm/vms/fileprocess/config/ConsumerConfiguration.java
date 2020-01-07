@@ -59,13 +59,6 @@ public class ConsumerConfiguration {
         return new DefaultKafkaConsumerFactory<>(consumerConfigs());
     }
 
-//    @Bean
-//    public ConsumerFactory<String, String> consumerFactory() {
-//        Map<String, Object> consumerProps = kafkaProperties.buildConsumerProperties();
-//        consumerProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-//        return new DefaultKafkaConsumerFactory<>(kafkaProperties.buildConsumerProperties());
-//    }
-
     @Bean
     public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();

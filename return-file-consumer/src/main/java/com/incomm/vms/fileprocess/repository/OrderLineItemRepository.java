@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class OrderLineItemRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(OrderLineItemRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderLineItemRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -28,7 +28,7 @@ public class OrderLineItemRepository {
                 + " AND vol_partner_id = ? "
                 + " AND ( vol_order_status NOT IN ( 'Completed', 'Shipped', 'Rejected', 'Shipping' ) "
                 + " OR vol_order_status IS NULL )";
-        LOGGER.debug("Query being executed {} with values {}", sql, orderDetailAggregate.toString());
+        LOGGER.debug("Query being executed {} with values {}", sql, orderDetailAggregate);
         return jdbcTemplate.update(sql,
                 orderDetailAggregate.getRejectCount(),
                 orderDetailAggregate.getTotalCount(),

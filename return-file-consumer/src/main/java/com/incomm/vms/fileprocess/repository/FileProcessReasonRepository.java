@@ -13,7 +13,7 @@ import static com.incomm.vms.fileprocess.config.Constants.RETURN_REASON_CACHE_NA
 
 @Repository
 public class FileProcessReasonRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(FileProcessReasonRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileProcessReasonRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

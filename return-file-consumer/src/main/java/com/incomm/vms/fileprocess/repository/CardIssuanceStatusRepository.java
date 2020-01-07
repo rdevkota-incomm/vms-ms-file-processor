@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class CardIssuanceStatusRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(CardIssuanceStatusRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardIssuanceStatusRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

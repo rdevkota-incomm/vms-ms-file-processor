@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public class OrderDetailRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(OrderDetailRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderDetailRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

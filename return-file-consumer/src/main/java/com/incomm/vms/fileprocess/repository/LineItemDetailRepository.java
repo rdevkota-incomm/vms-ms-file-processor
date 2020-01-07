@@ -15,12 +15,12 @@ import java.util.Optional;
 
 @Repository
 public class LineItemDetailRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(LineItemDetailRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LineItemDetailRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public Optional<LineItemDetail> findLineItem(String instanceCode, String serialNumber) throws BadSqlGrammarException {
+    public Optional<LineItemDetail> findLineItem(String instanceCode, String serialNumber) {
         LineItemDetail detail = null;
         String sql = " SELECT  cap_pan_code, vli_partner_id, vli_parent_oid, vli_order_id, vli_lineitem_id"
                 + " FROM ( SELECT  pan.cap_pan_code, lineitem.vli_partner_id,lineitem.vli_parent_oid,"

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ReturnFileDataRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(ReturnFileDataRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReturnFileDataRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

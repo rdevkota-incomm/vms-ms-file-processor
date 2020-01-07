@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class UploadDetailRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(UploadDetailRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadDetailRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -26,23 +26,20 @@ public class UploadDetailRepository {
                 "    vrf_ins_date,  " +
                 "    vrf_lupd_user,  " +
                 "    vrf_lupd_date )  " +
-                "    SELECT  " +
-                "        ?,  " +
-                "        ?,  " +
-                "        SUM(failure_count) + SUM(sucess_count) AS total_rec_count,  " +
-                "        SUM(sucess_count),  " +
+                "    SELECT  " + instanceCode + ",  " +
+                "        file_name,  " +
+                "        SUM(failure_count) + SUM(success_count) AS total_rec_count,  " +
+                "        SUM(success_count),  " +
                 "        SUM(failure_count),  " +
                 "        NULL,  " +
-                "        'Y',  " +
-                "        ?,  " +
-                "        SYSDATE,  " +
-                "        ?,  " +
+                "        'Y',  " + userId + " ,  " +
+                "        SYSDATE,  " + userId + ",  " +
                 "        SYSDATE  " +
                 "    FROM  " +
                 "        (  " +
                 "            SELECT  " +
                 "                COUNT(*) AS failure_count,  " +
-                "                0 sucess_count,  " +
+                "                0 success_count,  " +
                 "                vre_file_name AS file_name  " +
                 "            FROM  " +
                 "                vms_returnfile_error_data  " +
@@ -61,11 +58,11 @@ public class UploadDetailRepository {
                 "                vrd_file_name = ? " +
                 "            GROUP BY  " +
                 "                vrd_file_name  " +
-                "        )";
+                "        ) GROUP BY file_name";
 
         LOGGER.debug("Executing query \n {}", sql);
 
-        return jdbcTemplate.update(sql, instanceCode, fileName, userId, userId, fileName, fileName);
+        return jdbcTemplate.update(sql, fileName, fileName);
     }
 
 }

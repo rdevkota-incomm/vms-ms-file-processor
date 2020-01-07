@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ReturnFileErrorRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(ReturnFileErrorRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReturnFileErrorRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -20,7 +20,7 @@ public class ReturnFileErrorRepository {
                 + " vre_serial_number, vre_reject_code, vre_reject_reason,"
                 + " vre_pan, vre_error_message ) VALUES (" +
                 "  ?, ?, ?, ?, ?, ?, ?, ? )";
-
+        LOGGER.debug("Executing sql {}", sql);
         return jdbcTemplate.update(sql,
                 returnFileErrorData.getFileName(),
                 returnFileErrorData.getParentOrderId(),

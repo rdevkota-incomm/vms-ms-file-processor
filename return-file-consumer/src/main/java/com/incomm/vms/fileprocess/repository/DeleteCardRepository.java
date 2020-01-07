@@ -16,7 +16,7 @@ import java.util.Map;
 
 @Repository
 public class DeleteCardRepository {
-    private final static Logger LOGGER = LoggerFactory.getLogger(DeleteCardRepository.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeleteCardRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;

@@ -21,7 +21,7 @@ import static com.incomm.vms.fileprocess.config.Constants.*;
 
 @Service
 public class MessageProcessingService {
-    private final static Logger LOGGER = LoggerFactory.getLogger(MessageProcessingService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageProcessingService.class);
     private static final String SUCCESS_FLAG = "Y";
 
     @Autowired
@@ -51,7 +51,7 @@ public class MessageProcessingService {
         String serialNumber = returnFilePayload.getSerialNumber();
 
         Optional<LineItemDetail> lineItemDetailOptional = lineItemDetailRepository.findLineItem(instanceCode, serialNumber);
-        LOGGER.info("Retrieved LineItemDetail:{} for serialNumber:{} file:{}  correlationId:{}", lineItemDetailOptional.toString(),
+        LOGGER.info("Retrieved LineItemDetail:{} for serialNumber:{} file:{}  correlationId:{}", lineItemDetailOptional,
                 serialNumber, fileName, correlationId);
 
         if (!lineItemDetailOptional.isPresent()) {
@@ -65,7 +65,7 @@ public class MessageProcessingService {
             RejectReasonMaster fileProcessReason = fileProcessReasonRepository.findByRejectReason(returnFilePayload.getRejectReason());
 
             LOGGER.info("Updating LineItemDetail with serialNumber:{} panCode:{} fileProcessReason:{} file:{}  correlationId:{}",
-                    serialNumber, panCode, fileProcessReason.toString(), fileName, correlationId);
+                    serialNumber, panCode, fileProcessReason, fileName, correlationId);
 
             lineItemDetailRepository.updateStatus(serialNumber, panCode, fileProcessReason);
             if (SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag())) {
@@ -75,13 +75,13 @@ public class MessageProcessingService {
 
             LOGGER.info("Creating record in vms_returnfile_data table recordNumber:{} file:{}  correlationId:{}",
                     recordNumber, fileName, correlationId);
+            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetailOptional.get());
 
             if (isDeleteRequired(lineItemDetailOptional.get(), fileProcessReason)) {
                 LOGGER.info("Deleting card for panCode:{} file:{}  correlationId:{}", panCode, fileName, correlationId);
                 deleteCardRepository.deleteCard(lineItemDetailOptional.get().getPanCode());
             }
 
-            returnFileDataRepository.createRecord(instanceCode, fileName, recordNumber, returnFilePayload, lineItemDetailOptional.get());
             fileAggregationService.completeProcessing(lineItemDetailOptional.get(), fileName, correlationId);
 
         }
@@ -89,10 +89,11 @@ public class MessageProcessingService {
     }
 
     private boolean isDeleteRequired(LineItemDetail lineItemDetail, RejectReasonMaster fileProcessReason) {
+        boolean deleteRequire = false;
         if (!SUCCESS_FLAG.equalsIgnoreCase(fileProcessReason.getSuccessFailureFlag()) &&
                 !lineItemDetail.getPartnerId().equalsIgnoreCase("Replace_Partner_ID")) {
-            return true;
+            deleteRequire = true;
         }
-        return false;
+        return deleteRequire;
     }
 }
